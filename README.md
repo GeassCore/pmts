@@ -1,52 +1,51 @@
-# plct-machine
+# PMTS(PLCT Machine Test Suite)
 
 ## 介绍
 
-`plct-machine` 是基于 `qemu`， `RISCV`的虚拟开发板， 开发者可以在其上跑目前`RISCV`大多数扩展的可执行文件， 省去了寻找不同`qemu`版本运行的麻烦， 一次编译，多种环境运行。
+ `PLCT Machine` 是基于 [upstream qemu](https://github.com/qemu/qemu)及其 [RISCV Mailing Lists](https://lists.nongnu.org/mailman/listinfo/qemu-riscv)进行更新的，维护最新RISC-V 扩展集合的滚动qemu发行版(weekly)，目标是在各个版本更新的扩展处于Review状态下时，让开发者能预先进行最新的多扩展组合状态下的测试使用，开发者可以在其上跑目前`RISCV`大多数扩展的可执行文件， 省去了寻找不同`qemu`版本运行的麻烦。
 
+本仓库是针对`PLCT Machine`的测试过程集合, 同步更新测试过程/程序/脚本。
 
-## 特性
+## 目前扩展支持
 
-支持运行以下扩展的`RISCV`可执行文件:
+当前 PLCT Machine 版本：v0.2  
+|  扩展 | support   | latest   | 来源  |
+|  ----  | ----  | ----  | ----  |
+| [P扩展](https://github.com/riscv/riscv-p-spec)  | 0.9.4 | 0.9.5  | [mailist](https://lists.nongnu.org/archive/html/qemu-riscv/2021-06/msg00038.html)  |
+| [K扩展](https://github.com/riscv/riscv-crypto)  | 0.9.2 | 0.9.2 | [plct](https://github.com/plctlab/plct-qemu/tree/plct-k-dev)  |
+| [B扩展](https://github.com/riscv/riscv-bitmanip)  | 0.93 |0.93 | upstream  |
+| [Zfinx扩展](https://github.com/riscv/riscv-zfinx)  | 0.41 | 0.41  | [plct](https://github.com/plctlab/plct-qemu/tree/plct-zfinx-dev)  |
+| [RVV1.0](https://github.com/riscv/riscv-v-spec)  | 1.0 |1.0-rc1  | [mailist](https://lists.nongnu.org/archive/html/qemu-riscv/2021-02/msg00156.html)  |
 
-- P扩展
+注意: 所有除upstream外的版本都针对最新上游进行了rebase，如果发现修改错误或者运行失败请issue
 
-- [K扩展](https://github.com/riscv/riscv-crypto)
+## 编译构建
 
-- [B扩展](https://github.com/riscv/riscv-bitmanip)
-
-- [Zfinx扩展](https://github.com/riscv/riscv-zfinx)
-
-- [RVV1.0](https://github.com/riscv/riscv-v-spec)
-
-## 构建
-
-这意味着我们可以这样使用
-
-64位:
-```
-$ git clone -b plct-machine-dev https://github.com/isrc-cas/plct-qemu.git
-$ cd plct-qemu
-$ mkdir build
-$ cd build
-$ ../configure --target-list=riscv64-linux-user,riscv64-softmmu
-$ make
-$ ./qemu-riscv64 -cpu plct-u64 <your elf>
-```
-
-32位:
+PLCT Machine仓库：https://github.com/plctlab/plct-qemu  
+分支：plct-machine-dev  
+对应Tag: plct-machine-v0.2  
+commit: 8b03ae6bb18e8860e0fdf124e8667605dd7f04a5  
 
 ```
 $ git clone -b plct-machine-dev https://github.com/isrc-cas/plct-qemu.git
 $ cd plct-qemu
-$ mkdir build
-$ cd build
-$ ../configure --target-list=riscv32-linux-user,riscv32-softmmu
-$ make
-$ ./qemu-riscv32 -cpu plct-u32 <your elf>
+#目标32位，配置命令
+$ ./configure --target-list=riscv32-linux-user,riscv32-softmmu
+#目标64位，配置命令
+$ ./configure --target-list=riscv64-linux-user,riscv64-softmmu
+#目标32位和64位，配置命令
+$ ./configure --target-list=riscv32-linux-user,riscv32-softmmu,riscv64-linux-user,riscv64-softmmu
+#PS:以上三条配置选择一项，如果需要安装指定目录可以追加--prefix =(替换成你的qemu安装目录）
+$ make -j $(nproc)
+```
+编译结果:  
+`qemu源码/build` 或者 `安装目录/bin` 下有以下执行程序
+```
+qemu-edid  qemu-ga  qemu-img  qemu-io  qemu-keymap  qemu-nbd  qemu-pr-helper  qemu-riscv32  qemu-riscv64  qemu-storage-daemon  qemu-system-riscv32  qemu-system-riscv64
 ```
 
-## 使用
+
+## 使用示例
 
 针对不同的扩展，我们需要在运行时添加一些选项(以64位,`QEMU`用户态为例)
  
@@ -137,7 +136,7 @@ ct  == b'0470c1bf16d094f75092bab604cb340d'
     != b'3925841d02dc09fbdc118597196a0b32'
 make: *** [test/Makefile.in:45: run-test-aes_128_zscrypto_rv64] Error 1
 ```
-RV64还有点问题
+RV64由于版本更新，相应修改还有点问题
 
 #### RV32
 修改 benchmarks/common.mk
